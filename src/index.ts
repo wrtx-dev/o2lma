@@ -48,7 +48,7 @@ app.get("/api/tags", async (c) => {
       },
       signal: controller.signal,
     });
-    clearTimeout(timeout);
+
     if (res.ok) {
       const data = await res.json();
       let models: { name: string; model: string }[] = [];
@@ -62,6 +62,8 @@ app.get("/api/tags", async (c) => {
     }
   } catch (e) {
     console.error("fetch models error:", e);
+  } finally {
+    clearTimeout(timeout);
   }
   return c.text("internal error", 500);
 });
@@ -81,10 +83,12 @@ app.post("/v1/chat/completions", async (c) => {
       },
       signal: controller.signal,
     });
-    clearTimeout(timeout);
+
     return res;
   } catch (e) {
     return c.text("internal error", 500);
+  } finally {
+    clearTimeout(timeout);
   }
 });
 
