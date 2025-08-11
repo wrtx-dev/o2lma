@@ -20,13 +20,11 @@ app.get("/api/version", (c) => {
 });
 
 app.post("/api/show", async (c) => {
-  console.log(await c.req.text());
   const body = await c.req.json();
   let capabilities = ["completion", "tools", ...caps];
   if (body.model === "deepseek-reasoner") {
     capabilities = [...capabilities, "thinking"];
   }
-  console.log([...new Set(capabilities)]);
   return c.json({
     model_info: { "general.architecture": "qwen2" },
     capabilities: [...new Set(capabilities)],
@@ -37,40 +35,57 @@ app.get("/api/tags", async (c) => {
   const url = baseurl?.includes(defaultUrl)
     ? `${defaultUrl}/models`
     : `${baseurl}/v1/models`;
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Authorization": `Bearer ${apikey}`,
-      "Content-Type": "application/json",
-    },
-  });
-  if (res.ok) {
-    const data = await res.json();
-    let models: { name: string; model: string }[] = [];
-    data.data.map((item: any) => {
-      models.push({
-        name: item.id,
-        model: item.id,
-      });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 30_000);
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${apikey}`,
+        "Content-Type": "application/json",
+      },
+      signal: controller.signal,
     });
-    return c.json({ models: models });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      let models: { name: string; model: string }[] = [];
+      data.data.map((item: any) => {
+        models.push({
+          name: item.id,
+          model: item.id,
+        });
+      });
+      return c.json({ models: models });
+    }
+  } catch (e) {
+    console.error("fetch models error:", e);
   }
   return c.text("internal error", 500);
 });
 
 app.post("/v1/chat/completions", async (c) => {
-  const res = await proxy(
-    `${baseurl}/v1/chat/completions`,
-    {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 60_000);
+  try {
+    const res = await proxy(`${baseurl}/v1/chat/completions`, {
       ...c.req,
       method: "POST",
       headers: {
         ...c.req.header(),
         "Authorization": `Bearer ${apikey}`,
       },
-    },
-  );
-  return res;
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    return res;
+  } catch (e) {
+    return c.text("internal error", 500);
+  }
 });
 
 async function main() {
@@ -103,7 +118,7 @@ async function main() {
     .help("h")
     .alias("h", "help")
     .parse();
-  if (argv.url === undefined) {
+  if (argv.url === undefined || argv.url.length === 0) {
     baseurl = process.env.BASE_URL
       ? process.env.BASE_URL
       : "https://api.deepseek.com";
@@ -111,7 +126,7 @@ async function main() {
     baseurl = argv.url;
   }
 
-  if (argv.apikey === undefined) {
+  if (argv.apikey === undefined || argv.apikey.length === 0) {
     apikey = process.env.API_KEY ? process.env.API_KEY : undefined;
   } else {
     apikey = argv.apikey;

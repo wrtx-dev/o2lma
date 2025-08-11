@@ -1,7 +1,7 @@
 {
   "name": "o2lma",
   "type": "module",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "author": "wrtx",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -22,5 +22,10 @@
     "@types/node": "^20.11.17",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"
-  }
+  },
+  "keywords": [
+    "DeepSeek",
+    "Ollama",
+    "github copilot"
+  ]
 }
