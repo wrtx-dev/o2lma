@@ -1,6 +1,8 @@
 {
   "name": "o2lma",
   "type": "module",
+  "version": "0.0.1",
+  "author": "wrtx",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
