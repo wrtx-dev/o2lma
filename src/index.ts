@@ -22,20 +22,21 @@ app.get("/api/version", (c) => {
 app.post("/api/show", async (c) => {
   console.log(await c.req.text());
   const body = await c.req.json();
-  let capabilities = ["completion", "tools"];
+  let capabilities = ["completion", "tools", ...caps];
   if (body.model === "deepseek-reasoner") {
     capabilities = [...capabilities, "thinking"];
   }
+  console.log([...new Set(capabilities)]);
   return c.json({
     model_info: { "general.architecture": "qwen2" },
-    capabilities: capabilities,
+    capabilities: [...new Set(capabilities)],
   });
 });
 
 app.get("/api/tags", async (c) => {
-  const url = baseurl?.includes("api.siliconflow.cn")
-    ? `https://api.siliconflow.cn/v1/models`
-    : `${baseurl}/models`;
+  const url = baseurl?.includes(defaultUrl)
+    ? `${defaultUrl}/models`
+    : `${baseurl}/v1/models`;
   const res = await fetch(url, {
     method: "GET",
     headers: {
@@ -84,6 +85,14 @@ async function main() {
       type: "string",
       description: "api key",
     })
+    .option("host", {
+      type: "string",
+      description: "server host",
+    })
+    .option("port", {
+      type: "number",
+      description: "server port",
+    })
     .option("cap", {
       type: "array",
       array: true,
@@ -110,6 +119,8 @@ async function main() {
   if (argv.cap !== undefined) {
     caps = [...caps, ...argv.cap];
   }
+  const host = argv.host ? argv.host : "localhost";
+  const port = argv.port ? argv.port : 11434;
   if (!baseurl || !apikey) {
     console.log(
       "Please set the apikey and baseurl either via the command line or in a .env file.",
@@ -121,9 +132,10 @@ async function main() {
   }
   serve({
     fetch: app.fetch,
-    port: 11434,
+    hostname: host,
+    port: port,
   }, (info) => {
-    console.log(`Server is running on http://localhost:${info.port}`);
+    console.log(`Server is running on http://${info.address}:${info.port}`);
   });
 }
 
