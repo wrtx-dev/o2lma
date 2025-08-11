@@ -15,6 +15,9 @@
     "hono": "^4.9.0",
     "yargs": "^17.7.2"
   },
+  "bin":{
+    "cli":"./dist/index.js"
+  },
   "devDependencies": {
     "@types/node": "^20.11.17",
     "tsx": "^4.7.1",
