@@ -1,11 +1,11 @@
 {
   "name": "o2lma",
   "type": "module",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "wrtx",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc &&  node scripts/add-shebang.js",
     "start": "npm run build && node dist/index.js"
   },
   "dependencies": {
@@ -16,7 +16,7 @@
     "yargs": "^17.7.2"
   },
   "bin":{
-    "cli":"./dist/index.js"
+    "o2lma":"./dist/index.js"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
